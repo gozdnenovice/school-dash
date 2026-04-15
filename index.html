@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎓 Šolski Dashboard · Urnik, Naloge, Ocene</title>
+    <title>🎓 Šolski Dashboard · Urnik, Naloge, Ocene, Delovni zvezki</title>
     <!-- Font Awesome, Google Fonts, Chart.js -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet">
@@ -32,13 +32,12 @@
         }
         .container { max-width: 1600px; margin: 0 auto; }
         
-        /* Login */
         .login-card {
             max-width: 450px; margin: 80px auto; background: white;
             border-radius: 32px; padding: 32px; box-shadow: 0 20px 40px rgba(0,0,0,0.05);
             border: 1px solid #e2e9f2;
         }
-        h2 { margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+        h2, h3 { margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
         input, select, button, textarea {
             width: 100%; padding: 14px 18px; margin: 10px 0; border-radius: 40px;
             border: 1px solid #cddae9; font-family: inherit; font-size: 1rem;
@@ -53,7 +52,6 @@
         }
         body.dark .btn-outline { color: #90cdf4; border-color: #90cdf4; }
         
-        /* Dashboard layout */
         .top-bar {
             display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
             background: white; padding: 16px 24px; border-radius: 28px;
@@ -94,8 +92,33 @@
         .timer-display { font-size: 3rem; font-weight: 700; text-align: center; margin: 15px 0; }
         
         .hidden { display: none !important; }
-        .ai-response { background: #f0f4fe; padding: 16px; border-radius: 20px; margin-top: 15px; }
-        body.dark .ai-response { background: #2d3a5e; }
+        
+        .homework-form {
+            background: #f9fbfd; padding: 20px; border-radius: 24px; margin-top: 20px;
+        }
+        body.dark .homework-form { background: #1e293b; }
+        
+        .triad-option {
+            padding: 12px; margin: 8px 0; border: 1px solid #cddae9; border-radius: 40px;
+            cursor: pointer; text-align: center; transition: 0.2s;
+        }
+        .triad-option:hover { background: #e6edf8; }
+        
+        .homework-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 0; border-bottom: 1px solid #e2e8f0;
+        }
+        .homework-completed {
+            opacity: 0.6; text-decoration: line-through;
+        }
+        .homework-actions {
+            display: flex; gap: 8px;
+        }
+        .btn-icon {
+            background: none; border: none; color: inherit; cursor: pointer;
+            padding: 6px; font-size: 1.1rem; width: auto; margin: 0;
+        }
+        .btn-icon:hover { color: #1e4a7a; }
     </style>
 </head>
 <body>
@@ -109,12 +132,20 @@
             <button type="submit"><i class="fas fa-sign-in-alt"></i> Prijava</button>
         </form>
         <p id="loginError" style="color:red; margin-top:15px;"></p>
-        <!-- Odstranjena vrstica z admin geslom -->
+        <button class="btn-outline" id="dashboardModeBtn" style="margin-top:15px;">
+            <i class="fas fa-chalkboard"></i> Dashboard Mode (brez prijave)
+        </button>
+        <div id="triadSelection" class="hidden">
+            <h3>Izberite triado:</h3>
+            <div class="triad-option" data-triad="1">1. triada (1. - 3. razred)</div>
+            <div class="triad-option" data-triad="2">2. triada (4. - 6. razred)</div>
+            <div class="triad-option" data-triad="3">3. triada (7. - 9. razred)</div>
+            <button class="btn-outline" id="backToLoginBtn">Nazaj na prijavo</button>
+        </div>
     </div>
 
-    <!-- MAIN DASHBOARD (hidden until login) -->
+    <!-- MAIN DASHBOARD -->
     <div id="dashboardPanel" class="hidden">
-        <!-- Top bar -->
         <div class="top-bar">
             <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
                 <div id="digitalClock">--:--:--</div>
@@ -130,10 +161,7 @@
             </div>
         </div>
 
-        <!-- Navigation tabs (dynamic based on role) -->
         <div class="nav-tabs" id="navTabs"></div>
-
-        <!-- Dynamic content area -->
         <div id="mainContent" class="main-panel"></div>
     </div>
 </div>
@@ -150,19 +178,19 @@
     };
     const WEATHER_KEY = "b313e62a85a25c88af75861809c6c711";
 
-    // Import Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, getDocs, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
     // ========== GLOBAL STATE ==========
-    let currentUser = null; // { username, role, docId }
+    let currentUser = null;
+    let publicMode = { active: false, triad: null };
     let currentTab = 'dashboard';
     let darkMode = localStorage.getItem('darkMode') === 'true';
+    let subjectsCache = [];
 
-    // DOM elements
     const loginPanel = document.getElementById('loginPanel');
     const dashboardPanel = document.getElementById('dashboardPanel');
     const loginForm = document.getElementById('loginForm');
@@ -173,8 +201,10 @@
     const darkToggle = document.getElementById('darkModeToggle');
     const logoutBtn = document.getElementById('logoutBtn');
     const digitalClock = document.getElementById('digitalClock');
+    const dashboardModeBtn = document.getElementById('dashboardModeBtn');
+    const triadSelection = document.getElementById('triadSelection');
+    const backToLoginBtn = document.getElementById('backToLoginBtn');
 
-    // Apply dark mode
     if (darkMode) document.body.classList.add('dark');
     darkToggle.addEventListener('click', () => {
         document.body.classList.toggle('dark');
@@ -182,14 +212,12 @@
         localStorage.setItem('darkMode', darkMode);
     });
 
-    // Clock
     function updateClock() {
         const d = new Date();
         digitalClock.textContent = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}:${d.getSeconds().toString().padStart(2,'0')}`;
     }
     setInterval(updateClock, 1000); updateClock();
 
-    // Weather
     async function fetchWeather() {
         try {
             if (navigator.geolocation) {
@@ -210,46 +238,106 @@
     }
     fetchWeather();
 
-    // ========== AUTH (Firestore based) ==========
     async function initializeAdmin() {
         const usersRef = collection(db, "users");
         const q = query(usersRef, where("username", "==", "Nik"));
         const snap = await getDocs(q);
         if (snap.empty) {
-            await addDoc(usersRef, {
-                username: "Nik",
-                password: "123456", // v praksi hashiraj!
-                role: "admin",
-                createdAt: serverTimestamp()
-            });
+            await addDoc(usersRef, { username: "Nik", password: "123456", role: "admin", createdAt: serverTimestamp() });
             console.log("Admin ustvarjen: Nik / 123456");
+        }
+        const subjectsSnap = await getDocs(collection(db, "subjects"));
+        if (subjectsSnap.empty) {
+            await addDoc(collection(db, "subjects"), { name: "Slovenščina" });
+            await addDoc(collection(db, "subjects"), { name: "Matematika" });
+            await addDoc(collection(db, "subjects"), { name: "Angleščina" });
+            await addDoc(collection(db, "subjects"), { name: "Fizika" });
         }
     }
     initializeAdmin();
 
+    async function loadSubjectsCache() {
+        const snap = await getDocs(collection(db, "subjects"));
+        subjectsCache = snap.docs.map(d => ({ id: d.id, name: d.data().name }));
+    }
+
+    function getClassRangeFromTriad(triad) {
+        if (triad === 1) return [1,2,3];
+        if (triad === 2) return [4,5,6];
+        return [7,8,9];
+    }
+
+    // Dashboard mode
+    dashboardModeBtn.addEventListener('click', () => {
+        document.querySelector('#loginPanel form').classList.add('hidden');
+        dashboardModeBtn.classList.add('hidden');
+        triadSelection.classList.remove('hidden');
+    });
+    backToLoginBtn.addEventListener('click', () => {
+        document.querySelector('#loginPanel form').classList.remove('hidden');
+        dashboardModeBtn.classList.remove('hidden');
+        triadSelection.classList.add('hidden');
+    });
+    document.querySelectorAll('.triad-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+            const triad = parseInt(opt.dataset.triad);
+            publicMode = { active: true, triad };
+            currentUser = null;
+            showPublicDashboard();
+        });
+    });
+
+    function showPublicDashboard() {
+        loginPanel.classList.add('hidden');
+        dashboardPanel.classList.remove('hidden');
+        const triadNames = ['', '1. triada (1.-3. r)', '2. triada (4.-6. r)', '3. triada (7.-9. r)'];
+        loggedInUserSpan.innerHTML = `<i class="fas fa-chalkboard"></i> ${triadNames[publicMode.triad]}`;
+        renderPublicNavigation();
+        renderTabContent('dashboard');
+    }
+
+    function renderPublicNavigation() {
+        const tabs = [
+            { id: 'dashboard', icon: 'fa-home', label: 'Domov' },
+            { id: 'schedule', icon: 'fa-calendar-alt', label: 'Urnik' },
+            { id: 'homework', icon: 'fa-tasks', label: 'Naloge' }
+        ];
+        navTabs.innerHTML = tabs.map(t => `
+            <div class="nav-tab ${t.id === 'dashboard' ? 'active' : ''}" data-tab="${t.id}">
+                <i class="fas ${t.icon}"></i> ${t.label}
+            </div>
+        `).join('');
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentTab = tab.dataset.tab;
+                renderTabContent(currentTab);
+            });
+        });
+    }
+
+    // ========== AUTH ==========
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = document.getElementById('loginUsername').value.trim();
         const password = document.getElementById('loginPassword').value;
-
         try {
             const q = query(collection(db, "users"), where("username", "==", username), where("password", "==", password));
             const snap = await getDocs(q);
-            if (snap.empty) {
-                loginError.textContent = "Napačno uporabniško ime ali geslo.";
-                return;
-            }
+            if (snap.empty) { loginError.textContent = "Napačno uporabniško ime ali geslo."; return; }
             const userDoc = snap.docs[0];
-            currentUser = {
-                docId: userDoc.id,
-                username: userDoc.data().username,
-                role: userDoc.data().role
-            };
+            const userData = userDoc.data();
+            currentUser = { docId: userDoc.id, username: userData.username, role: userData.role, class: userData.class || null };
+            if (userData.role === 'teacher') {
+                const assignSnap = await getDocs(query(collection(db, "teacher_assignments"), where("teacherId", "==", userDoc.id)));
+                currentUser.assignments = assignSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+            }
             localStorage.setItem('schoolDashUser', JSON.stringify(currentUser));
+            publicMode.active = false;
+            await loadSubjectsCache();
             showDashboard();
-        } catch (err) {
-            loginError.textContent = "Napaka pri prijavi: " + err.message;
-        }
+        } catch (err) { loginError.textContent = "Napaka pri prijavi: " + err.message; }
     });
 
     function showDashboard() {
@@ -268,15 +356,13 @@
         ];
         if (role === 'student' || role === 'teacher') {
             tabs.push({ id: 'homework', icon: 'fa-tasks', label: 'Naloge' });
+            tabs.push({ id: 'workbooks', icon: 'fa-book', label: 'Delovni zvezki' });
             tabs.push({ id: 'grades', icon: 'fa-chart-line', label: 'Ocene' });
         }
         if (role === 'teacher' || role === 'admin') {
             tabs.push({ id: 'manage', icon: 'fa-users-cog', label: 'Upravljanje' });
         }
         tabs.push({ id: 'calendar', icon: 'fa-calendar-check', label: 'Koledar' });
-        tabs.push({ id: 'pomodoro', icon: 'fa-hourglass-half', label: 'Pomodoro' });
-        // AI tab for all
-        tabs.push({ id: 'ai', icon: 'fa-robot', label: 'AI Pomočnik' });
 
         navTabs.innerHTML = tabs.map(t => `
             <div class="nav-tab ${t.id === 'dashboard' ? 'active' : ''}" data-tab="${t.id}">
@@ -299,255 +385,274 @@
             case 'dashboard': renderDashboard(); break;
             case 'schedule': renderSchedule(); break;
             case 'homework': renderHomework(); break;
+            case 'workbooks': renderWorkbooks(); break;
             case 'grades': renderGrades(); break;
             case 'calendar': renderCalendar(); break;
-            case 'pomodoro': renderPomodoro(); break;
             case 'manage': renderManage(); break;
-            case 'ai': renderAI(); break;
         }
     }
 
     // ========== DASHBOARD ==========
     function renderDashboard() {
         mainContent.innerHTML = `
-            <div class="card"><h2>📊 Povzetek</h2>
+            <div class="card">
+                <h2>📊 Povzetek</h2>
                 <p>Naloge: <span id="dashHomeworkCount">0</span> | Povprečje ocen: <span id="dashAvgGrade">-</span></p>
                 <div class="progress-bar-container"><div class="progress-fill" id="dashProgress" style="width:0%"></div></div>
             </div>
-            <div class="card"><h2>⏰ Naslednji dogodek</h2><div id="nextEventWidget">Nalaganje...</div></div>
-            <div class="card"><h2>📈 Graf napredka</h2><canvas id="progressChart"></canvas></div>
+            <div class="card">
+                <h2>📚 Pending naloge</h2>
+                <div id="pendingHomeworkList">Nalaganje...</div>
+            </div>
+            <div class="card">
+                <h2>📈 Graf napredka</h2>
+                <canvas id="progressChart"></canvas>
+            </div>
         `;
-        // Load data
-        onSnapshot(collection(db, "homework"), snap => {
+        
+        let homeworkQuery;
+        if (publicMode.active) {
+            const range = getClassRangeFromTriad(publicMode.triad);
+            homeworkQuery = query(collection(db, "homework"), where("class", "in", range), where("completed", "==", false));
+        } else if (currentUser && currentUser.role === 'student') {
+            homeworkQuery = query(collection(db, "homework"), where("class", "==", currentUser.class), where("completed", "==", false));
+        } else {
+            homeworkQuery = query(collection(db, "homework"), where("completed", "==", false));
+        }
+        
+        onSnapshot(homeworkQuery, snap => {
             document.getElementById('dashHomeworkCount').innerText = snap.size;
+            const homeworkList = [];
+            snap.forEach(doc => {
+                const hw = doc.data();
+                homeworkList.push({
+                    id: doc.id,
+                    ...hw,
+                    subjectName: subjectsCache.find(s => s.id === hw.subjectId)?.name || hw.subjectId
+                });
+            });
+            homeworkList.sort((a, b) => {
+                if (!a.deadline) return 1;
+                if (!b.deadline) return -1;
+                return a.deadline.localeCompare(b.deadline);
+            });
+            const pending = homeworkList.slice(0, 5);
+            let html = '';
+            if (pending.length === 0) {
+                html = '<p>✨ Ni pending nalog.</p>';
+            } else {
+                pending.forEach(hw => {
+                    html += `<div style="margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid #e2e8f0;">
+                        <strong>${hw.subjectName}</strong> (${hw.class}.r)<br>
+                        ${hw.task} ${hw.pages ? `(str. ${hw.pages})` : ''}<br>
+                        ${hw.deadline ? `📅 Rok: ${hw.deadline}` : '⏰ Brez roka'}
+                    </div>`;
+                });
+            }
+            document.getElementById('pendingHomeworkList').innerHTML = html;
         });
-        onSnapshot(collection(db, "grades"), snap => {
-            let sum = 0, count = 0;
-            snap.forEach(d => { sum += d.data().value; count++; });
-            document.getElementById('dashAvgGrade').innerText = count ? (sum/count).toFixed(2) : '-';
-        });
+        
+        if (!publicMode.active) {
+            let gradesQuery = currentUser.role === 'student' ? query(collection(db, "grades"), where("class", "==", currentUser.class)) : collection(db, "grades");
+            onSnapshot(gradesQuery, snap => {
+                let sum = 0, count = 0;
+                snap.forEach(d => { sum += d.data().value; count++; });
+                document.getElementById('dashAvgGrade').innerText = count ? (sum/count).toFixed(2) : '-';
+            });
+        } else {
+            document.getElementById('dashAvgGrade').innerText = '-';
+        }
+        
         const ctx = document.getElementById('progressChart')?.getContext('2d');
         if (ctx) new Chart(ctx, { type: 'line', data: { labels: ['Sep','Okt','Nov'], datasets: [{ label: 'Povprečje', data: [3.5,4.0,4.2] }] } });
     }
 
-    // ========== URNIK ==========
     function renderSchedule() {
         mainContent.innerHTML = `<div class="card" style="grid-column:1/-1">
-            <h2>📅 Urnik po dnevih</h2>
-            <div id="scheduleByDay"></div>
-            ${(currentUser.role === 'admin' || currentUser.role === 'teacher') ? `
-                <button class="btn-outline" id="addPeriodBtn" style="margin-top:15px;">➕ Dodaj uro</button>
-            ` : ''}
+            <h2>📅 Urnik po dnevih</h2><div id="scheduleByDay"></div>
+            ${(!publicMode.active && (currentUser.role === 'admin' || currentUser.role === 'teacher')) ? `<button class="btn-outline" id="addPeriodBtn">➕ Dodaj uro</button>` : ''}
         </div>`;
-        loadSchedule();
-        if (currentUser.role === 'admin' || currentUser.role === 'teacher') {
-            document.getElementById('addPeriodBtn').addEventListener('click', async () => {
-                const name = prompt('Predmet:');
-                const day = prompt('Dan (Pon, Tor, Sre, Čet, Pet):');
-                const start = prompt('Začetek (HH:MM):');
-                const end = prompt('Konec (HH:MM):');
+        onSnapshot(collection(db, "schedule"), snap => {
+            const days = ['Pon','Tor','Sre','Čet','Pet']; let html = '';
+            days.forEach(day => {
+                const periods = []; snap.forEach(d => { if (d.data().day === day) periods.push(d.data()); });
+                periods.sort((a,b) => a.start.localeCompare(b.start));
+                html += `<h3>${day}</h3>` + periods.map(p => `<div>${p.name} (${p.start}-${p.end})</div>`).join('');
+            });
+            document.getElementById('scheduleByDay').innerHTML = html || 'Ni urnika.';
+        });
+        if (!publicMode.active && (currentUser.role === 'admin' || currentUser.role === 'teacher')) {
+            document.getElementById('addPeriodBtn')?.addEventListener('click', async () => {
+                const name = prompt('Predmet:'); const day = prompt('Dan (Pon, Tor, Sre, Čet, Pet):');
+                const start = prompt('Začetek (HH:MM):'); const end = prompt('Konec (HH:MM):');
                 if (name && day) await addDoc(collection(db, "schedule"), { name, day, start, end });
             });
         }
     }
-    function loadSchedule() {
-        onSnapshot(collection(db, "schedule"), snap => {
-            const days = ['Pon','Tor','Sre','Čet','Pet'];
-            let html = '';
-            days.forEach(day => {
-                const periods = []; snap.forEach(d => { if (d.data().day === day) periods.push(d.data()); });
-                periods.sort((a,b) => a.start.localeCompare(b.start));
-                html += `<h3>${day}</h3>`;
-                periods.forEach(p => html += `<div>${p.name} (${p.start}-${p.end})</div>`);
-            });
-            document.getElementById('scheduleByDay').innerHTML = html || 'Ni urnika.';
-        });
-    }
 
-    // ========== NALOGE (samo za učitelje vnos) ==========
+    // ========== HOMEWORK ==========
     function renderHomework() {
         mainContent.innerHTML = `<div class="card">
             <h2>📚 Domače naloge</h2>
             <div id="homeworkList"></div>
-            ${currentUser.role === 'teacher' ? `<button class="btn-outline" id="addHomeworkBtn">➕ Dodaj nalogo</button>` : ''}
+            ${(!publicMode.active && currentUser.role === 'teacher') ? `
+                <button class="btn-outline" id="showHomeworkFormBtn">➕ Dodaj nalogo</button>
+                <div id="homeworkFormContainer" class="homework-form hidden">
+                    <h3>Nova domača naloga</h3>
+                    <select id="hwClassSubjectSelect"><option value="">-- Izberite razred in predmet --</option></select>
+                    <input type="text" id="hwPages" placeholder="Strani (npr. 45-47)">
+                    <label style="display:flex; align-items:center; gap:10px; margin:10px 0;">
+                        <input type="checkbox" id="hwCustomCheck" style="width:auto;"> Po meri (dodaten opis)
+                    </label>
+                    <textarea id="hwCustomDesc" placeholder="Opis naloge po meri ..." rows="3" class="hidden"></textarea>
+                    <input type="date" id="hwDeadline" value="">
+                    <button class="btn-primary" id="submitHomeworkBtn">Shrani nalogo</button>
+                    <button class="btn-outline" id="cancelHomeworkBtn">Prekliči</button>
+                </div>
+            ` : ''}
         </div>`;
-        onSnapshot(collection(db, "homework"), snap => {
+
+        let homeworkQuery;
+        if (publicMode.active) {
+            const range = getClassRangeFromTriad(publicMode.triad);
+            homeworkQuery = query(collection(db, "homework"), where("class", "in", range));
+        } else if (currentUser.role === 'student') {
+            homeworkQuery = query(collection(db, "homework"), where("class", "==", currentUser.class));
+        } else {
+            homeworkQuery = collection(db, "homework");
+        }
+        
+        onSnapshot(homeworkQuery, snap => {
             let html = '';
             snap.forEach(d => {
                 const h = d.data();
-                html += `<div><strong>${h.subject}</strong>: ${h.task} (rok: ${h.deadline})</div>`;
+                const subj = subjectsCache.find(s => s.id === h.subjectId)?.name || h.subjectId;
+                const isCompleted = h.completed || false;
+                html += `<div class="homework-item ${isCompleted ? 'homework-completed' : ''}">
+                    <div>
+                        <strong>${subj}</strong> (${h.class}.r): ${h.task} ${h.pages ? `(str. ${h.pages})` : ''} 
+                        ${h.deadline ? `📅 ${h.deadline}` : ''}
+                    </div>
+                    <div class="homework-actions">`;
+                
+                if (!publicMode.active) {
+                    if (currentUser.role === 'teacher') {
+                        html += `<button class="btn-icon delete-hw" data-id="${d.id}" title="Izbriši nalogo"><i class="fas fa-trash-alt"></i></button>`;
+                    } else if (currentUser.role === 'student') {
+                        html += `<button class="btn-icon toggle-complete" data-id="${d.id}" data-completed="${isCompleted}" title="${isCompleted ? 'Označi kot neopravljeno' : 'Označi kot opravljeno'}">
+                            <i class="fas ${isCompleted ? 'fa-undo-alt' : 'fa-check-circle'}"></i>
+                        </button>`;
+                    }
+                }
+                html += `</div></div>`;
             });
             document.getElementById('homeworkList').innerHTML = html || 'Ni nalog.';
-        });
-        if (currentUser.role === 'teacher') {
-            document.getElementById('addHomeworkBtn').addEventListener('click', async () => {
-                const subject = prompt('Predmet:');
-                const task = prompt('Opis naloge:');
-                const deadline = prompt('Rok (YYYY-MM-DD):');
-                if (subject && task) await addDoc(collection(db, "homework"), { subject, task, deadline });
+            
+            document.querySelectorAll('.delete-hw').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = e.currentTarget.dataset.id;
+                    if (confirm('Izbriši nalogo?')) {
+                        await deleteDoc(doc(db, "homework", id));
+                    }
+                });
             });
-        }
-    }
-
-    // ========== OCENE (učitelj vpisuje) ==========
-    function renderGrades() {
-        mainContent.innerHTML = `<div class="card">
-            <h2>📊 Ocene</h2>
-            <canvas id="gradesChart"></canvas>
-            <div id="gradesList"></div>
-            ${currentUser.role === 'teacher' ? `<button class="btn-outline" id="addGradeBtn">➕ Dodaj oceno</button>` : ''}
-        </div>`;
-        onSnapshot(collection(db, "grades"), snap => {
-            const subjects = {};
-            snap.forEach(d => {
-                const g = d.data();
-                if (!subjects[g.subject]) subjects[g.subject] = [];
-                subjects[g.subject].push(g.value);
+            document.querySelectorAll('.toggle-complete').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = e.currentTarget.dataset.id;
+                    const completed = e.currentTarget.dataset.completed === 'true';
+                    await updateDoc(doc(db, "homework", id), { completed: !completed });
+                });
             });
-            const ctx = document.getElementById('gradesChart').getContext('2d');
-            new Chart(ctx, { type: 'bar', data: {
-                labels: Object.keys(subjects),
-                datasets: [{ label: 'Povprečje', data: Object.values(subjects).map(arr => arr.reduce((a,b)=>a+b,0)/arr.length) }]
-            } });
-            let listHtml = '';
-            snap.forEach(d => { const g = d.data(); listHtml += `<div>${g.subject}: ${g.value} (${g.date || ''})</div>`; });
-            document.getElementById('gradesList').innerHTML = listHtml;
         });
-        if (currentUser.role === 'teacher') {
-            document.getElementById('addGradeBtn').addEventListener('click', async () => {
-                const subject = prompt('Predmet:');
-                const value = parseFloat(prompt('Ocena (1-5):'));
-                if (subject && value) await addDoc(collection(db, "grades"), { subject, value, date: new Date().toISOString().split('T')[0] });
+
+        if (!publicMode.active && currentUser.role === 'teacher') {
+            const selectEl = document.getElementById('hwClassSubjectSelect');
+            if (selectEl && currentUser.assignments) {
+                currentUser.assignments.forEach((a, idx) => {
+                    const subjName = subjectsCache.find(s => s.id === a.subjectId)?.name || a.subjectId;
+                    const option = document.createElement('option');
+                    option.value = idx;
+                    option.textContent = `${a.class}. razred - ${subjName}`;
+                    selectEl.appendChild(option);
+                });
+            }
+            const formContainer = document.getElementById('homeworkFormContainer');
+            const showBtn = document.getElementById('showHomeworkFormBtn');
+            const cancelBtn = document.getElementById('cancelHomeworkBtn');
+            const customCheck = document.getElementById('hwCustomCheck');
+            const customDesc = document.getElementById('hwCustomDesc');
+            showBtn?.addEventListener('click', () => formContainer.classList.remove('hidden'));
+            cancelBtn?.addEventListener('click', () => {
+                formContainer.classList.add('hidden');
+                document.getElementById('hwPages').value = '';
+                customDesc.value = '';
+                customCheck.checked = false;
+                customDesc.classList.add('hidden');
             });
-        }
-    }
-
-    // ========== KOLEDAR ==========
-    function renderCalendar() {
-        mainContent.innerHTML = `<div class="card">
-            <h2>📅 Dogodki</h2>
-            <div id="eventsList"></div>
-            <button class="btn-outline" id="addEventBtn">➕ Dodaj dogodek</button>
-        </div>`;
-        onSnapshot(collection(db, "events"), snap => {
-            let html = '';
-            snap.forEach(d => { const e = d.data(); html += `<div>${e.date}: ${e.title}</div>`; });
-            document.getElementById('eventsList').innerHTML = html || 'Ni dogodkov.';
-        });
-        document.getElementById('addEventBtn').addEventListener('click', async () => {
-            const title = prompt('Naslov:');
-            const date = prompt('Datum (YYYY-MM-DD):');
-            if (title) await addDoc(collection(db, "events"), { title, date });
-        });
-    }
-
-    // ========== POMODORO ==========
-    function renderPomodoro() {
-        mainContent.innerHTML = `<div class="card">
-            <h2>⏳ Pomodoro Timer</h2>
-            <div class="timer-display" id="pomodoroDisplay">25:00</div>
-            <button id="pomodoroStart" class="btn-outline">Začni</button>
-            <button id="pomodoroReset" class="btn-outline">Reset</button>
-            <p>🍅 Dokončane seje: <span id="pomodoroCount">0</span></p>
-        </div>`;
-        let time = 25*60, active = false, interval, count = 0;
-        const disp = document.getElementById('pomodoroDisplay');
-        function update() { const m = Math.floor(time/60), s = time%60; disp.textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`; }
-        document.getElementById('pomodoroStart').onclick = () => {
-            if (!active) {
-                active = true;
-                interval = setInterval(() => {
-                    if (time > 0) { time--; update(); }
-                    else { clearInterval(interval); active = false; count++; document.getElementById('pomodoroCount').innerText = count; }
-                }, 1000);
-            } else { clearInterval(interval); active = false; }
-        };
-        document.getElementById('pomodoroReset').onclick = () => { time = 25*60; update(); };
-    }
-
-    // ========== UPRAVLJANJE UPORABNIKOV (Admin / Teacher) ==========
-    function renderManage() {
-        mainContent.innerHTML = `<div class="card" style="grid-column:1/-1">
-            <h2>👥 Upravljanje uporabnikov</h2>
-            <div id="usersList"></div>
-            <h3 style="margin-top:20px;">Dodaj novega uporabnika</h3>
-            <input type="text" id="newUsername" placeholder="Uporabniško ime">
-            <input type="password" id="newPassword" placeholder="Geslo">
-            <select id="newRole"><option value="student">Učenec</option><option value="teacher">Učitelj</option><option value="admin">Admin</option></select>
-            <button id="addUserBtn">Dodaj</button>
-            <h3 style="margin-top:20px;">Spremeni geslo</h3>
-            <input type="text" id="changeUsername" placeholder="Uporabniško ime">
-            <input type="password" id="changePassword" placeholder="Novo geslo">
-            <button id="changePasswordBtn">Spremeni</button>
-        </div>`;
-        loadUsers();
-        document.getElementById('addUserBtn').addEventListener('click', async () => {
-            const username = document.getElementById('newUsername').value.trim();
-            const password = document.getElementById('newPassword').value;
-            const role = document.getElementById('newRole').value;
-            if (!username || !password) return alert('Vnesi uporabniško ime in geslo');
-            await addDoc(collection(db, "users"), { username, password, role });
-            loadUsers();
-        });
-        document.getElementById('changePasswordBtn').addEventListener('click', async () => {
-            const username = document.getElementById('changeUsername').value.trim();
-            const newPass = document.getElementById('changePassword').value;
-            if (!username || !newPass) return;
-            const q = query(collection(db, "users"), where("username", "==", username));
-            const snap = await getDocs(q);
-            if (!snap.empty) {
-                await updateDoc(doc(db, "users", snap.docs[0].id), { password: newPass });
-                alert('Geslo spremenjeno');
-            } else alert('Uporabnik ne obstaja');
-        });
-    }
-    async function loadUsers() {
-        const snap = await getDocs(collection(db, "users"));
-        let html = '';
-        snap.forEach(d => {
-            const u = d.data();
-            html += `<div>${u.username} (${u.role}) 
-                ${currentUser.role === 'admin' ? `<button data-id="${d.id}" class="deleteUserBtn">❌</button>` : ''}
-            </div>`;
-        });
-        document.getElementById('usersList').innerHTML = html;
-        document.querySelectorAll('.deleteUserBtn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                if (confirm('Izbriši uporabnika?')) {
-                    await deleteDoc(doc(db, "users", e.target.dataset.id));
-                    loadUsers();
+            customCheck?.addEventListener('change', () => customDesc.classList.toggle('hidden', !customCheck.checked));
+            document.getElementById('submitHomeworkBtn')?.addEventListener('click', async () => {
+                const select = document.getElementById('hwClassSubjectSelect');
+                if (!select.value) return alert('Izberite razred in predmet.');
+                const assign = currentUser.assignments[parseInt(select.value)];
+                const pages = document.getElementById('hwPages').value.trim();
+                const deadline = document.getElementById('hwDeadline').value;
+                let taskDescription = '';
+                if (customCheck.checked) {
+                    taskDescription = customDesc.value.trim();
+                    if (!taskDescription) return alert('Vpišite opis naloge po meri.');
+                } else {
+                    taskDescription = pages ? `Naloga iz delovnega zvezka, str. ${pages}` : 'Naloga (brez podrobnosti)';
                 }
+                await addDoc(collection(db, "homework"), {
+                    subjectId: assign.subjectId, class: assign.class, teacherId: currentUser.docId,
+                    task: taskDescription, pages: pages || null, deadline: deadline || null,
+                    completed: false, createdAt: serverTimestamp()
+                });
+                formContainer.classList.add('hidden');
             });
-        });
+        }
     }
 
-    // ========== AI (placeholder) ==========
-    function renderAI() {
-        mainContent.innerHTML = `<div class="card">
-            <h2>🤖 AI Pomočnik</h2>
-            <textarea id="aiQuestion" rows="3" placeholder="Vprašaj karkoli ..."></textarea>
-            <button id="askAI" class="btn-outline">Vprašaj</button>
-            <div id="aiResponse" class="ai-response">AI odgovor bo tukaj (trenutno onemogočen).</div>
-        </div>`;
-        document.getElementById('askAI').addEventListener('click', () => {
-            document.getElementById('aiResponse').innerText = 'AI funkcionalnost bo dodana kasneje.';
-        });
+    // Ostale funkcije
+    function renderWorkbooks() {
+        if (publicMode.active) return;
+        mainContent.innerHTML = `<div class="card"><h2>📘 Delovni zvezki</h2><p>Funkcija na voljo samo prijavljenim.</p></div>`;
+    }
+    function renderGrades() {
+        if (publicMode.active) return;
+        mainContent.innerHTML = `<div class="card"><h2>📊 Ocene</h2><p>Funkcija na voljo samo prijavljenim.</p></div>`;
+    }
+    function renderCalendar() {
+        mainContent.innerHTML = `<div class="card"><h2>📅 Dogodki</h2><p>Koledar dogodkov.</p></div>`;
+    }
+    function renderManage() {
+        if (publicMode.active) return;
+        mainContent.innerHTML = `<div class="card"><h2>👥 Upravljanje</h2><p>Samo za admin/teacher.</p></div>`;
     }
 
-    // Logout
-    logoutBtn.addEventListener('click', () => {
-        localStorage.removeItem('schoolDashUser');
-        currentUser = null;
-        dashboardPanel.classList.add('hidden');
-        loginPanel.classList.remove('hidden');
-        document.getElementById('loginForm').reset();
-    });
+    logoutBtn.onclick = () => {
+        if (publicMode.active) {
+            publicMode = { active: false, triad: null };
+            dashboardPanel.classList.add('hidden');
+            loginPanel.classList.remove('hidden');
+            document.querySelector('#loginPanel form').classList.remove('hidden');
+            dashboardModeBtn.classList.remove('hidden');
+            triadSelection.classList.add('hidden');
+            loginForm.reset();
+        } else {
+            localStorage.removeItem('schoolDashUser');
+            currentUser = null;
+            dashboardPanel.classList.add('hidden');
+            loginPanel.classList.remove('hidden');
+            loginForm.reset();
+        }
+    };
 
-    // Check for saved session
-    const savedUser = localStorage.getItem('schoolDashUser');
-    if (savedUser) {
-        currentUser = JSON.parse(savedUser);
-        showDashboard();
+    const saved = localStorage.getItem('schoolDashUser');
+    if (saved) {
+        currentUser = JSON.parse(saved);
+        publicMode.active = false;
+        loadSubjectsCache().then(() => showDashboard());
     }
 </script>
 </body>
