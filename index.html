@@ -2,7 +2,7 @@
 <html lang="sl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🎓 Šolski Dashboard · Urnik, Naloge, Ocene</title>
     <!-- Font Awesome, Google Fonts, Chart.js -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -21,141 +21,120 @@
             background: #0f172a;
             color: #e2e8f0;
         }
-        body.dark .card, body.dark .top-bar, body.dark .nav-tab {
+        body.dark .card, body.dark .login-card, body.dark .nav-tab {
             background: #1e293b;
             border-color: #334155;
         }
-        body.dark input, body.dark textarea, body.dark select {
+        body.dark input, body.dark select, body.dark textarea {
             background: #0f172a;
             color: #e2e8f0;
             border-color: #475569;
         }
-        .dashboard { max-width: 1600px; margin: 0 auto; }
+        .container { max-width: 1600px; margin: 0 auto; }
         
-        /* Header */
+        /* Login */
+        .login-card {
+            max-width: 450px; margin: 80px auto; background: white;
+            border-radius: 32px; padding: 32px; box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+            border: 1px solid #e2e9f2;
+        }
+        h2 { margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+        input, select, button, textarea {
+            width: 100%; padding: 14px 18px; margin: 10px 0; border-radius: 40px;
+            border: 1px solid #cddae9; font-family: inherit; font-size: 1rem;
+        }
+        button {
+            background: #1e4a7a; color: white; border: none; font-weight: 600;
+            cursor: pointer; transition: 0.2s;
+        }
+        button:hover { background: #0f3b5e; }
+        .btn-outline {
+            background: transparent; border: 1px solid #1e4a7a; color: #1e4a7a;
+        }
+        body.dark .btn-outline { color: #90cdf4; border-color: #90cdf4; }
+        
+        /* Dashboard layout */
         .top-bar {
             display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
             background: white; padding: 16px 24px; border-radius: 28px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.02); border: 1px solid #e9eef4;
-            margin-bottom: 20px;
+            border: 1px solid #e9eef4; margin-bottom: 20px;
         }
-        .clock-section { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
         #digitalClock {
-            font-size: 2.2rem; font-weight: 600; background: #f0f4fe; padding: 6px 18px;
-            border-radius: 40px; color: #0f3b5e;
+            font-size: 2rem; font-weight: 600; background: #f0f4fe;
+            padding: 6px 20px; border-radius: 40px; color: #0f3b5e;
         }
         body.dark #digitalClock { background: #2d3a5e; color: #e0f2fe; }
-        .weather-widget {
-            display: flex; align-items: center; gap: 10px; background: #e6edf8;
-            padding: 8px 18px; border-radius: 40px;
-        }
-        .dark .weather-widget { background: #334155; }
+        .weather-widget { display: flex; align-items: center; gap: 10px; }
         
-        /* Navigation Tabs */
         .nav-tabs {
             display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;
         }
         .nav-tab {
             background: white; border: 1px solid #e2e9f2; padding: 12px 20px;
-            border-radius: 40px; font-weight: 600; cursor: pointer; transition: 0.2s;
+            border-radius: 40px; font-weight: 600; cursor: pointer;
             display: flex; align-items: center; gap: 8px;
         }
         .nav-tab.active { background: #1e4a7a; color: white; border-color: #1e4a7a; }
-        .dark .nav-tab.active { background: #3b82f6; }
         
-        /* Main grid */
         .main-panel {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;
         }
         .card {
             background: white; border-radius: 28px; padding: 22px;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.03);
             border: 1px solid #e2e9f2; transition: transform 0.2s;
         }
         .card:hover { transform: translateY(-3px); }
-        .card-header {
-            display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
-        }
-        .card-header h2 { font-size: 1.5rem; display: flex; gap: 10px; }
-        .btn {
-            background: white; border: 1px solid #cddae9; padding: 8px 16px;
-            border-radius: 30px; font-weight: 500; cursor: pointer;
-            display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem;
-        }
-        .btn-primary { background: #1e4a7a; border-color: #1e4a7a; color: white; }
-        .btn-sm { padding: 5px 12px; font-size: 0.8rem; }
         
-        /* Progress bars */
         .progress-bar-container {
-            background: #e2e8f0; height: 10px; border-radius: 10px; margin: 8px 0;
+            background: #e2e8f0; height: 10px; border-radius: 10px; margin: 10px 0;
         }
         .progress-fill {
             height: 10px; border-radius: 10px; background: #1e4a7a; width: 0%;
         }
-        
-        /* Pomodoro */
         .timer-display { font-size: 3rem; font-weight: 700; text-align: center; margin: 15px 0; }
         
-        /* Search */
-        .search-box { margin-bottom: 20px; }
-        
-        /* Focus mode overlay */
-        .focus-overlay {
-            position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7);
-            z-index: 999; display: none; justify-content: center; align-items: center;
-        }
-        
-        /* Responsive */
-        @media (max-width: 700px) { body { padding: 10px; } }
+        .hidden { display: none !important; }
+        .ai-response { background: #f0f4fe; padding: 16px; border-radius: 20px; margin-top: 15px; }
+        body.dark .ai-response { background: #2d3a5e; }
     </style>
 </head>
 <body>
-<div class="dashboard">
-    <!-- TOP BAR -->
-    <div class="top-bar">
-        <div class="clock-section">
-            <div id="digitalClock">--:--:--</div>
-            <div class="weather-widget">
-                <i class="fas fa-cloud-sun" id="weatherIcon"></i>
-                <span><span id="weatherTemp">--°</span> <span id="weatherDesc">--</span></span>
+<div class="container">
+    <!-- LOGIN PANEL -->
+    <div id="loginPanel" class="login-card">
+        <h2><i class="fas fa-school"></i> Šolski Dashboard</h2>
+        <form id="loginForm">
+            <input type="text" id="loginUsername" placeholder="Uporabniško ime" required>
+            <input type="password" id="loginPassword" placeholder="Geslo" required>
+            <button type="submit"><i class="fas fa-sign-in-alt"></i> Prijava</button>
+        </form>
+        <p id="loginError" style="color:red; margin-top:15px;"></p>
+        <!-- Odstranjena vrstica z admin geslom -->
+    </div>
+
+    <!-- MAIN DASHBOARD (hidden until login) -->
+    <div id="dashboardPanel" class="hidden">
+        <!-- Top bar -->
+        <div class="top-bar">
+            <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+                <div id="digitalClock">--:--:--</div>
+                <div class="weather-widget">
+                    <i class="fas fa-cloud-sun" id="weatherIcon"></i>
+                    <span><span id="weatherTemp">--°</span> <span id="weatherDesc">--</span></span>
+                </div>
             </div>
-            <button class="btn" id="darkModeToggle"><i class="fas fa-moon"></i> Temni način</button>
+            <div>
+                <span id="loggedInUser" style="margin-right:15px; font-weight:500;"></span>
+                <button class="btn-outline" id="darkModeToggle"><i class="fas fa-moon"></i></button>
+                <button class="btn-outline" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Odjava</button>
+            </div>
         </div>
-        <div>
-            <button class="btn btn-primary" id="focusModeBtn"><i class="fas fa-eye"></i> Focus Mode</button>
-            <button class="btn" id="syncStatusBtn"><i class="fas fa-cloud-upload-alt"></i> Sinhroniziraj</button>
-        </div>
-    </div>
 
-    <!-- NAVIGATION TABS -->
-    <div class="nav-tabs">
-        <div class="nav-tab active" data-tab="dashboard"><i class="fas fa-home"></i> Domov</div>
-        <div class="nav-tab" data-tab="schedule"><i class="fas fa-calendar-alt"></i> Urnik</div>
-        <div class="nav-tab" data-tab="homework"><i class="fas fa-tasks"></i> Naloge</div>
-        <div class="nav-tab" data-tab="grades"><i class="fas fa-chart-line"></i> Ocene</div>
-        <div class="nav-tab" data-tab="calendar"><i class="fas fa-calendar-check"></i> Koledar</div>
-        <div class="nav-tab" data-tab="pomodoro"><i class="fas fa-hourglass-half"></i> Pomodoro</div>
-        <div class="nav-tab" data-tab="ai"><i class="fas fa-robot"></i> AI Pomočnik</div>
-    </div>
+        <!-- Navigation tabs (dynamic based on role) -->
+        <div class="nav-tabs" id="navTabs"></div>
 
-    <!-- SEARCH -->
-    <div class="search-box">
-        <input type="text" id="globalSearch" placeholder="🔍 Išči naloge, zapiske, predmete ..." style="width:100%; padding:14px 20px; border-radius:40px;">
-    </div>
-
-    <!-- DYNAMIC PANELS -->
-    <div id="tab-content" class="main-panel"></div>
-</div>
-
-<!-- FOCUS MODE OVERLAY -->
-<div class="focus-overlay" id="focusOverlay">
-    <div style="background:white; padding:40px; border-radius:40px; text-align:center; max-width:500px;">
-        <h2>🧘 Focus Mode</h2>
-        <p style="margin:20px 0;">Trenutna naloga: <strong id="focusTaskName">Brez naloge</strong></p>
-        <div class="timer-display" id="focusTimerDisplay">25:00</div>
-        <button class="btn btn-primary" id="focusStartPause">Začni</button>
-        <button class="btn" id="focusReset">Reset</button>
-        <button class="btn" id="exitFocus">Izhod</button>
+        <!-- Dynamic content area -->
+        <div id="mainContent" class="main-panel"></div>
     </div>
 </div>
 
@@ -167,34 +146,37 @@
         projectId: "schooldash-e8c6c",
         storageBucket: "schooldash-e8c6c.firebasestorage.app",
         messagingSenderId: "758782018828",
-        appId: "1:758782018828:web:0d319b01389e04422cf529",
-        measurementId: "G-YT0CGMVRLS"
+        appId: "1:758782018828:web:0d319b01389e04422cf529"
     };
     const WEATHER_KEY = "b313e62a85a25c88af75861809c6c711";
 
-    // Imports
+    // Import Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    
+    import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    console.log('🔥 Firebase ready');
 
-    // ---------- GLOBAL STATE ----------
+    // ========== GLOBAL STATE ==========
+    let currentUser = null; // { username, role, docId }
     let currentTab = 'dashboard';
     let darkMode = localStorage.getItem('darkMode') === 'true';
-    let focusMode = false;
-    let pomodoroInterval, pomodoroTime = 25*60, pomodoroActive = false;
-    let currentUser = { points: 0 }; // gamification
-    
+
     // DOM elements
-    const digitalClock = document.getElementById('digitalClock');
-    const tabContent = document.getElementById('tab-content');
+    const loginPanel = document.getElementById('loginPanel');
+    const dashboardPanel = document.getElementById('dashboardPanel');
+    const loginForm = document.getElementById('loginForm');
+    const loginError = document.getElementById('loginError');
+    const navTabs = document.getElementById('navTabs');
+    const mainContent = document.getElementById('mainContent');
+    const loggedInUserSpan = document.getElementById('loggedInUser');
     const darkToggle = document.getElementById('darkModeToggle');
-    
+    const logoutBtn = document.getElementById('logoutBtn');
+    const digitalClock = document.getElementById('digitalClock');
+
     // Apply dark mode
-    if(darkMode) document.body.classList.add('dark');
-    darkToggle.addEventListener('click', ()=>{
+    if (darkMode) document.body.classList.add('dark');
+    darkToggle.addEventListener('click', () => {
         document.body.classList.toggle('dark');
         darkMode = document.body.classList.contains('dark');
         localStorage.setItem('darkMode', darkMode);
@@ -206,7 +188,7 @@
         digitalClock.textContent = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}:${d.getSeconds().toString().padStart(2,'0')}`;
     }
     setInterval(updateClock, 1000); updateClock();
-    
+
     // Weather
     async function fetchWeather() {
         try {
@@ -214,216 +196,359 @@
                 navigator.geolocation.getCurrentPosition(async pos => {
                     const url = `https://api.openweathermap.org/data/2.5/weather?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&units=metric&appid=${WEATHER_KEY}`;
                     const r = await fetch(url); const d = await r.json();
-                    if(d.main) {
+                    if (d.main) {
                         document.getElementById('weatherTemp').innerText = `${Math.round(d.main.temp)}°`;
                         document.getElementById('weatherDesc').innerText = d.weather[0].description;
                     }
-                }, ()=> fallbackWeather());
+                }, () => fallbackWeather());
             } else fallbackWeather();
         } catch { fallbackWeather(); }
     }
-    function fallbackWeather(){ document.getElementById('weatherTemp').innerText='18°'; document.getElementById('weatherDesc').innerText='Oblačno'; }
+    function fallbackWeather() {
+        document.getElementById('weatherTemp').innerText = '18°';
+        document.getElementById('weatherDesc').innerText = 'Oblačno';
+    }
     fetchWeather();
 
-    // ---------- TAB RENDERING ----------
-    const tabs = document.querySelectorAll('.nav-tab');
-    tabs.forEach(t => t.addEventListener('click', ()=>{
-        tabs.forEach(tb => tb.classList.remove('active'));
-        t.classList.add('active');
-        currentTab = t.dataset.tab;
-        renderTabContent(currentTab);
-    }));
+    // ========== AUTH (Firestore based) ==========
+    async function initializeAdmin() {
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, where("username", "==", "Nik"));
+        const snap = await getDocs(q);
+        if (snap.empty) {
+            await addDoc(usersRef, {
+                username: "Nik",
+                password: "123456", // v praksi hashiraj!
+                role: "admin",
+                createdAt: serverTimestamp()
+            });
+            console.log("Admin ustvarjen: Nik / 123456");
+        }
+    }
+    initializeAdmin();
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('loginUsername').value.trim();
+        const password = document.getElementById('loginPassword').value;
+
+        try {
+            const q = query(collection(db, "users"), where("username", "==", username), where("password", "==", password));
+            const snap = await getDocs(q);
+            if (snap.empty) {
+                loginError.textContent = "Napačno uporabniško ime ali geslo.";
+                return;
+            }
+            const userDoc = snap.docs[0];
+            currentUser = {
+                docId: userDoc.id,
+                username: userDoc.data().username,
+                role: userDoc.data().role
+            };
+            localStorage.setItem('schoolDashUser', JSON.stringify(currentUser));
+            showDashboard();
+        } catch (err) {
+            loginError.textContent = "Napaka pri prijavi: " + err.message;
+        }
+    });
+
+    function showDashboard() {
+        loginPanel.classList.add('hidden');
+        dashboardPanel.classList.remove('hidden');
+        loggedInUserSpan.innerHTML = `<i class="fas fa-user"></i> ${currentUser.username} (${currentUser.role})`;
+        renderNavigation();
+        renderTabContent('dashboard');
+    }
+
+    function renderNavigation() {
+        const role = currentUser.role;
+        let tabs = [
+            { id: 'dashboard', icon: 'fa-home', label: 'Domov' },
+            { id: 'schedule', icon: 'fa-calendar-alt', label: 'Urnik' }
+        ];
+        if (role === 'student' || role === 'teacher') {
+            tabs.push({ id: 'homework', icon: 'fa-tasks', label: 'Naloge' });
+            tabs.push({ id: 'grades', icon: 'fa-chart-line', label: 'Ocene' });
+        }
+        if (role === 'teacher' || role === 'admin') {
+            tabs.push({ id: 'manage', icon: 'fa-users-cog', label: 'Upravljanje' });
+        }
+        tabs.push({ id: 'calendar', icon: 'fa-calendar-check', label: 'Koledar' });
+        tabs.push({ id: 'pomodoro', icon: 'fa-hourglass-half', label: 'Pomodoro' });
+        // AI tab for all
+        tabs.push({ id: 'ai', icon: 'fa-robot', label: 'AI Pomočnik' });
+
+        navTabs.innerHTML = tabs.map(t => `
+            <div class="nav-tab ${t.id === 'dashboard' ? 'active' : ''}" data-tab="${t.id}">
+                <i class="fas ${t.icon}"></i> ${t.label}
+            </div>
+        `).join('');
+
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentTab = tab.dataset.tab;
+                renderTabContent(currentTab);
+            });
+        });
+    }
 
     function renderTabContent(tab) {
-        if(tab === 'dashboard') renderDashboard();
-        else if(tab === 'schedule') renderScheduleTab();
-        else if(tab === 'homework') renderHomeworkTab();
-        else if(tab === 'grades') renderGradesTab();
-        else if(tab === 'calendar') renderCalendarTab();
-        else if(tab === 'pomodoro') renderPomodoroTab();
-        else if(tab === 'ai') renderAITab();
+        switch (tab) {
+            case 'dashboard': renderDashboard(); break;
+            case 'schedule': renderSchedule(); break;
+            case 'homework': renderHomework(); break;
+            case 'grades': renderGrades(); break;
+            case 'calendar': renderCalendar(); break;
+            case 'pomodoro': renderPomodoro(); break;
+            case 'manage': renderManage(); break;
+            case 'ai': renderAI(); break;
+        }
     }
 
-    // ---------- DASHBOARD (povzetek) ----------
+    // ========== DASHBOARD ==========
     function renderDashboard() {
-        tabContent.innerHTML = `
-            <div class="card"><h2>📊 Povzetek</h2><p>Naloge: <span id="dashHomeworkCount">0</span> | Povprečje ocen: <span id="dashAvgGrade">-</span></p>
-            <div class="progress-bar-container"><div class="progress-fill" id="dashProgress" style="width:0%"></div></div>
-            <p>Točke: <span id="userPoints">0</span> 🏆</p></div>
+        mainContent.innerHTML = `
+            <div class="card"><h2>📊 Povzetek</h2>
+                <p>Naloge: <span id="dashHomeworkCount">0</span> | Povprečje ocen: <span id="dashAvgGrade">-</span></p>
+                <div class="progress-bar-container"><div class="progress-fill" id="dashProgress" style="width:0%"></div></div>
+            </div>
             <div class="card"><h2>⏰ Naslednji dogodek</h2><div id="nextEventWidget">Nalaganje...</div></div>
-            <div class="card"><h2>📈 Graf napredka</h2><canvas id="progressChart" width="300" height="150"></canvas></div>
+            <div class="card"><h2>📈 Graf napredka</h2><canvas id="progressChart"></canvas></div>
         `;
-        loadDashboardData();
-    }
-    async function loadDashboardData() {
-        // Firestore listeners
+        // Load data
         onSnapshot(collection(db, "homework"), snap => {
             document.getElementById('dashHomeworkCount').innerText = snap.size;
         });
         onSnapshot(collection(db, "grades"), snap => {
-            let sum=0, count=0; snap.forEach(d=>{ sum+=d.data().value; count++; });
-            const avg = count ? (sum/count).toFixed(2) : '-';
-            document.getElementById('dashAvgGrade').innerText = avg;
-            // progress bar based on completed homework? mock
+            let sum = 0, count = 0;
+            snap.forEach(d => { sum += d.data().value; count++; });
+            document.getElementById('dashAvgGrade').innerText = count ? (sum/count).toFixed(2) : '-';
         });
-        // Chart
         const ctx = document.getElementById('progressChart')?.getContext('2d');
-        if(ctx) new Chart(ctx, { type:'line', data:{ labels:['Sep','Okt','Nov'], datasets:[{label:'Povprečje', data:[3.5,4.0,4.2]}] }});
+        if (ctx) new Chart(ctx, { type: 'line', data: { labels: ['Sep','Okt','Nov'], datasets: [{ label: 'Povprečje', data: [3.5,4.0,4.2] }] } });
     }
 
-    // ---------- URNIK (schedule) ----------
-    function renderScheduleTab() {
-        tabContent.innerHTML = `
-            <div class="card" style="grid-column:1/-1">
-                <div class="card-header"><h2><i class="fas fa-calendar-day"></i> Urnik po dnevih</h2>
-                <button class="btn btn-primary" id="addPeriodBtn"><i class="fas fa-plus"></i> Dodaj uro</button></div>
-                <div id="scheduleByDay"></div>
-            </div>
-        `;
+    // ========== URNIK ==========
+    function renderSchedule() {
+        mainContent.innerHTML = `<div class="card" style="grid-column:1/-1">
+            <h2>📅 Urnik po dnevih</h2>
+            <div id="scheduleByDay"></div>
+            ${(currentUser.role === 'admin' || currentUser.role === 'teacher') ? `
+                <button class="btn-outline" id="addPeriodBtn" style="margin-top:15px;">➕ Dodaj uro</button>
+            ` : ''}
+        </div>`;
         loadSchedule();
-        document.getElementById('addPeriodBtn').addEventListener('click', async ()=>{
-            const name = prompt('Ime predmeta:');
-            const day = prompt('Dan (Pon, Tor, Sre, Čet, Pet):');
-            const start = prompt('Začetek (HH:MM):');
-            const end = prompt('Konec (HH:MM):');
-            if(name && day) await addDoc(collection(db, "schedule"), { name, day, start, end });
-        });
+        if (currentUser.role === 'admin' || currentUser.role === 'teacher') {
+            document.getElementById('addPeriodBtn').addEventListener('click', async () => {
+                const name = prompt('Predmet:');
+                const day = prompt('Dan (Pon, Tor, Sre, Čet, Pet):');
+                const start = prompt('Začetek (HH:MM):');
+                const end = prompt('Konec (HH:MM):');
+                if (name && day) await addDoc(collection(db, "schedule"), { name, day, start, end });
+            });
+        }
     }
     function loadSchedule() {
-        onSnapshot(query(collection(db, "schedule")), snap => {
+        onSnapshot(collection(db, "schedule"), snap => {
             const days = ['Pon','Tor','Sre','Čet','Pet'];
             let html = '';
             days.forEach(day => {
-                const periods = []; snap.forEach(d=> { if(d.data().day===day) periods.push(d.data()); });
-                periods.sort((a,b)=> a.start.localeCompare(b.start));
-                html += `<h3>${day}</h3><div class="period-list">`;
-                periods.forEach(p=> html+=`<div class="period-item"><span>${p.name}</span><span>${p.start}-${p.end}</span></div>`);
-                html += '</div>';
+                const periods = []; snap.forEach(d => { if (d.data().day === day) periods.push(d.data()); });
+                periods.sort((a,b) => a.start.localeCompare(b.start));
+                html += `<h3>${day}</h3>`;
+                periods.forEach(p => html += `<div>${p.name} (${p.start}-${p.end})</div>`);
             });
             document.getElementById('scheduleByDay').innerHTML = html || 'Ni urnika.';
         });
     }
 
-    // ---------- NALOGE (homework) ----------
-    function renderHomeworkTab() {
-        tabContent.innerHTML = `
-            <div class="card"><h2>📚 Naloge</h2><div id="homeworkList"></div>
-            <button class="btn btn-primary" id="addHomeworkBtn">➕ Dodaj nalogo</button></div>
-        `;
-        onSnapshot(query(collection(db, "homework")), snap => {
-            let html = ''; snap.forEach(d=>{ const t=d.data(); html+=`<div>${t.subject}: ${t.task} (rok: ${t.deadline}) <button data-id="${d.id}" class="completeHomework">✅</button></div>`; });
-            document.getElementById('homeworkList').innerHTML = html;
-        });
-        document.getElementById('addHomeworkBtn').addEventListener('click', async ()=>{
-            const subj = prompt('Predmet:'); const task = prompt('Opis:'); const deadline = prompt('Rok (YYYY-MM-DD):');
-            if(subj) await addDoc(collection(db, "homework"), { subject: subj, task, deadline, completed: false });
-        });
-    }
-
-    // ---------- OCENE + GRAFI ----------
-    function renderGradesTab() {
-        tabContent.innerHTML = `
-            <div class="card"><h2>📊 Ocene</h2><canvas id="gradesChart"></canvas>
-            <div id="gradesList"></div><button class="btn" id="addGradeBtn">Dodaj oceno</button></div>
-            <div class="card"><h2>📈 Predmeti napredek</h2><div id="subjectProgress"></div></div>
-        `;
-        // grades chart
-        onSnapshot(collection(db, "grades"), snap => {
-            const subjects = {}; snap.forEach(d=>{ const g=d.data(); if(!subjects[g.subject]) subjects[g.subject]=[]; subjects[g.subject].push(g.value); });
-            const ctx = document.getElementById('gradesChart').getContext('2d');
-            new Chart(ctx, { type:'bar', data:{ labels:Object.keys(subjects), datasets:[{label:'Povprečje', data:Object.values(subjects).map(arr=> arr.reduce((a,b)=>a+b,0)/arr.length) }] }});
-            // subject progress bars
-            let progHtml = '';
-            Object.entries(subjects).forEach(([subj, grades])=>{
-                const avg = grades.reduce((a,b)=>a+b,0)/grades.length;
-                progHtml += `<div><strong>${subj}</strong> <div class="progress-bar-container"><div class="progress-fill" style="width:${avg*20}%"></div></div></div>`;
+    // ========== NALOGE (samo za učitelje vnos) ==========
+    function renderHomework() {
+        mainContent.innerHTML = `<div class="card">
+            <h2>📚 Domače naloge</h2>
+            <div id="homeworkList"></div>
+            ${currentUser.role === 'teacher' ? `<button class="btn-outline" id="addHomeworkBtn">➕ Dodaj nalogo</button>` : ''}
+        </div>`;
+        onSnapshot(collection(db, "homework"), snap => {
+            let html = '';
+            snap.forEach(d => {
+                const h = d.data();
+                html += `<div><strong>${h.subject}</strong>: ${h.task} (rok: ${h.deadline})</div>`;
             });
-            document.getElementById('subjectProgress').innerHTML = progHtml;
+            document.getElementById('homeworkList').innerHTML = html || 'Ni nalog.';
         });
-        document.getElementById('addGradeBtn').addEventListener('click', async ()=>{
-            const subj = prompt('Predmet:'); const val = parseFloat(prompt('Ocena (1-5):'));
-            if(subj && val) await addDoc(collection(db, "grades"), { subject: subj, value: val, date: new Date().toISOString() });
-        });
+        if (currentUser.role === 'teacher') {
+            document.getElementById('addHomeworkBtn').addEventListener('click', async () => {
+                const subject = prompt('Predmet:');
+                const task = prompt('Opis naloge:');
+                const deadline = prompt('Rok (YYYY-MM-DD):');
+                if (subject && task) await addDoc(collection(db, "homework"), { subject, task, deadline });
+            });
+        }
     }
 
-    // ---------- KOLEDAR ----------
-    function renderCalendarTab() {
-        tabContent.innerHTML = `<div class="card"><h2>📅 Dogodki</h2><div id="eventsList"></div><button class="btn" id="addEventBtn">Dodaj dogodek</button></div>`;
+    // ========== OCENE (učitelj vpisuje) ==========
+    function renderGrades() {
+        mainContent.innerHTML = `<div class="card">
+            <h2>📊 Ocene</h2>
+            <canvas id="gradesChart"></canvas>
+            <div id="gradesList"></div>
+            ${currentUser.role === 'teacher' ? `<button class="btn-outline" id="addGradeBtn">➕ Dodaj oceno</button>` : ''}
+        </div>`;
+        onSnapshot(collection(db, "grades"), snap => {
+            const subjects = {};
+            snap.forEach(d => {
+                const g = d.data();
+                if (!subjects[g.subject]) subjects[g.subject] = [];
+                subjects[g.subject].push(g.value);
+            });
+            const ctx = document.getElementById('gradesChart').getContext('2d');
+            new Chart(ctx, { type: 'bar', data: {
+                labels: Object.keys(subjects),
+                datasets: [{ label: 'Povprečje', data: Object.values(subjects).map(arr => arr.reduce((a,b)=>a+b,0)/arr.length) }]
+            } });
+            let listHtml = '';
+            snap.forEach(d => { const g = d.data(); listHtml += `<div>${g.subject}: ${g.value} (${g.date || ''})</div>`; });
+            document.getElementById('gradesList').innerHTML = listHtml;
+        });
+        if (currentUser.role === 'teacher') {
+            document.getElementById('addGradeBtn').addEventListener('click', async () => {
+                const subject = prompt('Predmet:');
+                const value = parseFloat(prompt('Ocena (1-5):'));
+                if (subject && value) await addDoc(collection(db, "grades"), { subject, value, date: new Date().toISOString().split('T')[0] });
+            });
+        }
+    }
+
+    // ========== KOLEDAR ==========
+    function renderCalendar() {
+        mainContent.innerHTML = `<div class="card">
+            <h2>📅 Dogodki</h2>
+            <div id="eventsList"></div>
+            <button class="btn-outline" id="addEventBtn">➕ Dodaj dogodek</button>
+        </div>`;
         onSnapshot(collection(db, "events"), snap => {
-            let html=''; snap.forEach(d=>{ const e=d.data(); html+=`<div>${e.date}: ${e.title}</div>`; });
-            document.getElementById('eventsList').innerHTML=html;
+            let html = '';
+            snap.forEach(d => { const e = d.data(); html += `<div>${e.date}: ${e.title}</div>`; });
+            document.getElementById('eventsList').innerHTML = html || 'Ni dogodkov.';
         });
-        document.getElementById('addEventBtn').addEventListener('click', async ()=>{
-            const title = prompt('Naslov:'); const date = prompt('Datum (YYYY-MM-DD):');
-            if(title) await addDoc(collection(db, "events"), { title, date });
+        document.getElementById('addEventBtn').addEventListener('click', async () => {
+            const title = prompt('Naslov:');
+            const date = prompt('Datum (YYYY-MM-DD):');
+            if (title) await addDoc(collection(db, "events"), { title, date });
         });
     }
 
-    // ---------- POMODORO ----------
-    function renderPomodoroTab() {
-        tabContent.innerHTML = `<div class="card"><h2>⏳ Pomodoro Timer</h2>
+    // ========== POMODORO ==========
+    function renderPomodoro() {
+        mainContent.innerHTML = `<div class="card">
+            <h2>⏳ Pomodoro Timer</h2>
             <div class="timer-display" id="pomodoroDisplay">25:00</div>
-            <button class="btn btn-primary" id="pomodoroStart">Začni</button>
-            <button class="btn" id="pomodoroReset">Reset</button>
-            <p>Dokončane seje: <span id="pomodoroCount">0</span> 🍅</p></div>`;
+            <button id="pomodoroStart" class="btn-outline">Začni</button>
+            <button id="pomodoroReset" class="btn-outline">Reset</button>
+            <p>🍅 Dokončane seje: <span id="pomodoroCount">0</span></p>
+        </div>`;
         let time = 25*60, active = false, interval, count = 0;
         const disp = document.getElementById('pomodoroDisplay');
-        function updateDisplay(){ const m=Math.floor(time/60), s=time%60; disp.textContent=`${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`; }
-        document.getElementById('pomodoroStart').onclick = ()=>{
-            if(!active){ active=true; interval=setInterval(()=>{ if(time>0){ time--; updateDisplay(); } else { clearInterval(interval); active=false; count++; document.getElementById('pomodoroCount').innerText=count; }},1000); }
-            else { clearInterval(interval); active=false; }
+        function update() { const m = Math.floor(time/60), s = time%60; disp.textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`; }
+        document.getElementById('pomodoroStart').onclick = () => {
+            if (!active) {
+                active = true;
+                interval = setInterval(() => {
+                    if (time > 0) { time--; update(); }
+                    else { clearInterval(interval); active = false; count++; document.getElementById('pomodoroCount').innerText = count; }
+                }, 1000);
+            } else { clearInterval(interval); active = false; }
         };
-        document.getElementById('pomodoroReset').onclick = ()=>{ time=25*60; updateDisplay(); };
+        document.getElementById('pomodoroReset').onclick = () => { time = 25*60; update(); };
     }
 
-    // ---------- AI POMOČNIK (mock) ----------
-    function renderAITab() {
-        tabContent.innerHTML = `<div class="card"><h2>🤖 AI Pomočnik</h2>
-            <textarea id="aiQuestion" rows="3" placeholder="Vprašaj karkoli o snovi ..." style="width:100%"></textarea>
-            <button class="btn btn-primary" id="askAI">Vprašaj</button>
-            <div id="aiResponse" style="margin-top:20px; padding:15px; background:#f0f4fe; border-radius:20px;">Odgovor se prikaže tukaj.</div>
+    // ========== UPRAVLJANJE UPORABNIKOV (Admin / Teacher) ==========
+    function renderManage() {
+        mainContent.innerHTML = `<div class="card" style="grid-column:1/-1">
+            <h2>👥 Upravljanje uporabnikov</h2>
+            <div id="usersList"></div>
+            <h3 style="margin-top:20px;">Dodaj novega uporabnika</h3>
+            <input type="text" id="newUsername" placeholder="Uporabniško ime">
+            <input type="password" id="newPassword" placeholder="Geslo">
+            <select id="newRole"><option value="student">Učenec</option><option value="teacher">Učitelj</option><option value="admin">Admin</option></select>
+            <button id="addUserBtn">Dodaj</button>
+            <h3 style="margin-top:20px;">Spremeni geslo</h3>
+            <input type="text" id="changeUsername" placeholder="Uporabniško ime">
+            <input type="password" id="changePassword" placeholder="Novo geslo">
+            <button id="changePasswordBtn">Spremeni</button>
         </div>`;
-        document.getElementById('askAI').addEventListener('click', ()=>{
-            const q = document.getElementById('aiQuestion').value;
-            document.getElementById('aiResponse').innerText = `🧠 AI: To je odličen vprašanje! (Demo odgovor za: "${q}")`;
+        loadUsers();
+        document.getElementById('addUserBtn').addEventListener('click', async () => {
+            const username = document.getElementById('newUsername').value.trim();
+            const password = document.getElementById('newPassword').value;
+            const role = document.getElementById('newRole').value;
+            if (!username || !password) return alert('Vnesi uporabniško ime in geslo');
+            await addDoc(collection(db, "users"), { username, password, role });
+            loadUsers();
+        });
+        document.getElementById('changePasswordBtn').addEventListener('click', async () => {
+            const username = document.getElementById('changeUsername').value.trim();
+            const newPass = document.getElementById('changePassword').value;
+            if (!username || !newPass) return;
+            const q = query(collection(db, "users"), where("username", "==", username));
+            const snap = await getDocs(q);
+            if (!snap.empty) {
+                await updateDoc(doc(db, "users", snap.docs[0].id), { password: newPass });
+                alert('Geslo spremenjeno');
+            } else alert('Uporabnik ne obstaja');
+        });
+    }
+    async function loadUsers() {
+        const snap = await getDocs(collection(db, "users"));
+        let html = '';
+        snap.forEach(d => {
+            const u = d.data();
+            html += `<div>${u.username} (${u.role}) 
+                ${currentUser.role === 'admin' ? `<button data-id="${d.id}" class="deleteUserBtn">❌</button>` : ''}
+            </div>`;
+        });
+        document.getElementById('usersList').innerHTML = html;
+        document.querySelectorAll('.deleteUserBtn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                if (confirm('Izbriši uporabnika?')) {
+                    await deleteDoc(doc(db, "users", e.target.dataset.id));
+                    loadUsers();
+                }
+            });
         });
     }
 
-    // ---------- FOCUS MODE ----------
-    const overlay = document.getElementById('focusOverlay');
-    document.getElementById('focusModeBtn').addEventListener('click', ()=>{
-        overlay.style.display = 'flex';
-        // pick first homework as focus
-        onSnapshot(collection(db, "homework"), snap => {
-            if(!snap.empty) {
-                const first = snap.docs[0].data();
-                document.getElementById('focusTaskName').innerText = `${first.subject}: ${first.task}`;
-            }
+    // ========== AI (placeholder) ==========
+    function renderAI() {
+        mainContent.innerHTML = `<div class="card">
+            <h2>🤖 AI Pomočnik</h2>
+            <textarea id="aiQuestion" rows="3" placeholder="Vprašaj karkoli ..."></textarea>
+            <button id="askAI" class="btn-outline">Vprašaj</button>
+            <div id="aiResponse" class="ai-response">AI odgovor bo tukaj (trenutno onemogočen).</div>
+        </div>`;
+        document.getElementById('askAI').addEventListener('click', () => {
+            document.getElementById('aiResponse').innerText = 'AI funkcionalnost bo dodana kasneje.';
         });
-    });
-    document.getElementById('exitFocus').addEventListener('click', ()=> overlay.style.display='none');
-    // Focus timer
-    let focusTime=25*60, focusActive=false, focusInterval;
-    const focusDisp = document.getElementById('focusTimerDisplay');
-    function updateFocusDisp(){ const m=Math.floor(focusTime/60), s=focusTime%60; focusDisp.textContent=`${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`; }
-    document.getElementById('focusStartPause').addEventListener('click', function(){
-        if(!focusActive){ focusActive=true; this.textContent='Pavza';
-            focusInterval=setInterval(()=>{ if(focusTime>0){ focusTime--; updateFocusDisp(); } else { clearInterval(focusInterval); focusActive=false; }},1000);
-        } else { clearInterval(focusInterval); focusActive=false; this.textContent='Začni'; }
-    });
-    document.getElementById('focusReset').addEventListener('click', ()=>{ focusTime=25*60; updateFocusDisp(); });
+    }
 
-    // Search functionality (simple)
-    document.getElementById('globalSearch').addEventListener('input', (e)=>{
-        const term = e.target.value.toLowerCase();
-        // highlight in lists? simple alert
+    // Logout
+    logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('schoolDashUser');
+        currentUser = null;
+        dashboardPanel.classList.add('hidden');
+        loginPanel.classList.remove('hidden');
+        document.getElementById('loginForm').reset();
     });
 
-    // Initial render
-    renderDashboard();
-    
-    // Sync status (mock)
-    document.getElementById('syncStatusBtn').addEventListener('click', ()=> alert('✅ Podatki se sinhronizirajo prek Firebase v realnem času.'));
+    // Check for saved session
+    const savedUser = localStorage.getItem('schoolDashUser');
+    if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        showDashboard();
+    }
 </script>
 </body>
 </html>
